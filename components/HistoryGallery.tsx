@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { GeneratedImage } from '../types';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Film, Loader2 } from 'lucide-react';
 
 interface HistoryGalleryProps {
   images: GeneratedImage[];
@@ -17,9 +17,10 @@ export const HistoryGallery: React.FC<HistoryGalleryProps> = ({ images, onSelect
   const checkScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      // Use a small tolerance (1px) for fractional pixel issues
-      setCanScrollLeft(scrollLeft > 1);
-      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+      // Use a small tolerance (10px) for left as requested
+      setCanScrollLeft(scrollLeft > 10);
+      // Use 20px tolerance for right as requested
+      setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth - 20);
     }
   };
 
@@ -57,7 +58,7 @@ export const HistoryGallery: React.FC<HistoryGalleryProps> = ({ images, onSelect
 
   return (
     <div className="relative mt-4 w-full">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => scroll('left')}
           disabled={!canScrollLeft}
@@ -71,24 +72,39 @@ export const HistoryGallery: React.FC<HistoryGalleryProps> = ({ images, onSelect
             <div 
                 ref={scrollContainerRef}
                 onScroll={checkScroll}
-                className="flex items-center gap-3 p-2 overflow-x-auto scrollbar-hide snap-x"
+                className="flex items-center gap-3 p-3 overflow-x-auto scrollbar-hide snap-x"
             >
             {images.map((img) => (
                 <div
                 key={img.id}
                 onClick={() => onSelect(img)}
                 className={`
-                    relative group flex-shrink-0 h-24 w-24 rounded-lg overflow-hidden cursor-pointer transition-all snap-start
+                    relative group flex-shrink-0 h-24 w-24 rounded-lg overflow-hidden cursor-pointer transition-all snap-start select-none
                     ${selectedId === img.id ? 'ring-2 ring-purple-400 ring-offset-2 ring-offset-[#0D0B14]' : 'ring-2 ring-transparent hover:ring-white/50'}
                 `}
                 >
                 <img
                     src={img.url}
                     alt={img.prompt}
-                    className={`h-full w-full object-cover transition-transform duration-400 ease-in-out group-hover:scale-110 ${img.isBlurred ? 'blur-sm' : ''}`}
+                    className={`h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500 ${img.isBlurred ? 'blur-sm' : ''}`}
                     loading="lazy"
                     onContextMenu={(e) => e.preventDefault()}
                 />
+                
+                {/* Live Video Indicator */}
+                {img.videoUrl && (
+                    <div className="absolute top-1 right-1 bg-black/60 rounded-full p-1 border border-white/20">
+                        <Film className="w-3 h-3 text-white" />
+                    </div>
+                )}
+                
+                {/* Generating Loading Indicator */}
+                {img.videoStatus === 'generating' && (
+                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                         <Loader2 className="w-6 h-6 text-white/80 animate-spin" />
+                     </div>
+                )}
+                
                 </div>
             ))}
             </div>
