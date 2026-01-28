@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, ShieldCheck, ShieldAlert, ChevronDown, Loader2, RotateCcw, Check, Trash2, Globe } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, ShieldAlert, ChevronDown, Loader2, RotateCcw, Check, Trash2, Globe, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { translations } from '../../translations';
 import { ServiceMode, CustomProvider, RemoteModelList, ProviderId } from '../../types';
@@ -21,6 +21,7 @@ interface ProviderTabProps {
     handleRefreshCustomModels: (id: string) => void;
     refreshingProviders: Record<string, boolean>;
     refreshSuccessProviders: Record<string, boolean>;
+    refreshErrorProviders: Record<string, boolean>;
     // Add New Custom Provider Props
     newProviderName: string; setNewProviderName: (v: string) => void;
     newProviderUrl: string; setNewProviderUrl: (v: string) => void;
@@ -145,7 +146,7 @@ export const ProviderTab: React.FC<ProviderTabProps> = (props) => {
     const showAddCustomProvider = props.serviceMode !== 'local';
 
     return (
-        <div>
+        <>
             {showBaseProviders && (
                 <>
                     {renderProviderPanel('huggingface', t.provider_huggingface, 'bg-yellow-500', 
@@ -181,10 +182,17 @@ export const ProviderTab: React.FC<ProviderTabProps> = (props) => {
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
-                                    <div className={`text-xs transition-colors duration-300 flex items-center gap-1.5 ${props.refreshSuccessProviders[cp.id] ? 'text-green-400 font-medium' : 'text-white/40'}`}>
-                                    {props.refreshSuccessProviders[cp.id] && <Check className="w-3 h-3" />}
-                                    {t.models_count.replace('{count}', ((cp.models.generate?.length || 0) + (cp.models.edit?.length || 0) + (cp.models.video?.length || 0) + (cp.models.text?.length || 0) + (cp.models.upscaler?.length || 0)).toString())}
-                                    </div>
+                                    {props.refreshErrorProviders[cp.id] ? (
+                                        <div className="text-xs text-red-400 font-medium flex items-center gap-1.5">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Model list failed to load
+                                        </div>
+                                    ) : (
+                                        <div className={`text-xs transition-colors duration-300 flex items-center gap-1.5 ${props.refreshSuccessProviders[cp.id] ? 'text-green-400 font-medium' : 'text-white/40'}`}>
+                                            {props.refreshSuccessProviders[cp.id] && <Check className="w-3 h-3" />}
+                                            {t.models_count.replace('{count}', ((cp.models.generate?.length || 0) + (cp.models.edit?.length || 0) + (cp.models.video?.length || 0) + (cp.models.text?.length || 0) + (cp.models.upscaler?.length || 0)).toString())}
+                                        </div>
+                                    )}
                                     <button onClick={() => props.handleDeleteCustomProvider(cp.id)} className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title={t.delete || "Delete"}><Trash2 className="w-4 h-4" /></button>
                             </div>
                         </div>
@@ -218,6 +226,6 @@ export const ProviderTab: React.FC<ProviderTabProps> = (props) => {
                     ))}
                 </div>
             )}
-        </div>
+        </>
     );
 };
